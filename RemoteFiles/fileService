@@ -162,15 +162,15 @@ function serv()
 				term.setCursorPos(oldX, oldY)
 				for i,v in ipairs(rs.getSides()) do
 					if peripheral.getType(v) == "printer" then
-						printFile(v, fs.combine("remoteFiles/prints/", msg[2]), msg[2])
+						if msg[4] then
+							printFile(v, fs.combine("remoteFiles/prints/", msg[2]), msg[4])
+						else
+							printFile(v, fs.combine("remoteFiles/prints/", msg[2]), msg[2])
+						end
 						break
 					end
 				end
 			end
 		end
 	end
-end
-
-function exit()
-	rednet.close(modemSide)
 end

@@ -1,0 +1,176 @@
+-- This RemoteFile protocol was originally developed for the old CommuteOS, and attempted to provide an API allowing for developers to be able to use a printer without worrying about sides.
+-- It may have worked if anyone had bothered to use it.
+-- This is designed to be run alongside the OS's shell.
+
+function printFile(printerSide, file, pageTitle)
+	local printerPeripheralX = 25
+	local printerPeripheralY = 21
+	local printerPeripheral = peripheral.wrap(printerSide)
+	if peripheral.isPresent(printerSide) and peripheral.getType(printerSide) == "printer" and printerPeripheral ~= nil then
+		if pageTitle == nil then
+			pageTitle = file
+		end
+		local page = 1
+		local function doChecks()
+			while printerPeripheral.getInkLevel() <= 0 do
+				local x,y = term.getCursorPos()
+				term.setCursorPos(1, 0)
+				term.setTextColor(colors.red)
+				term.write("Print Failed: Out of ink!")
+				term.setTextColor(colors.white)
+				term.setCursorPos(x,y)
+				return false
+			end
+			
+			if printerPeripheral.getPaperLevel() <= 0 then
+				local x,y = term.getCursorPos()
+				term.setCursorPos(1, 0)
+				term.setTextColor(colors.red)
+				term.write("Print Failed: Out of paper!")
+				term.setTextColor(colors.white)
+				term.setCursorPos(x,y)
+				return false
+			end
+			return true
+		end
+		
+		local function newLine()
+			local x,y = printerPeripheral.getCursorPos()
+			printerPeripheral.setCursorPos(1,y+1)
+		end
+		local lines = 1
+		
+		local function newPage()
+			if not doChecks() then
+				return false
+			end
+			if not printerPeripheral.endPage() then
+				local x,y = term.getCursorPos()
+				term.setCursorPos(1, 0)
+				term.setTextColor(colors.red)
+				term.write("Print Failed: Error ending page!")
+				term.setTextColor(colors.white)
+				term.setCursorPos(x,y)
+				return false
+			end
+			printerPeripheral.newPage()
+			printerPeripheral.setPageTitle(pageTitle.." (Page "..page..")")
+			page = page+1
+			return true
+		end
+		
+		local handle = fs.open(file, "r")
+		local lines = {}
+		while true do
+			local line = handle.readLine()
+			if line == nil then
+				break
+			else
+				table.insert(lines, line)
+			end
+		end
+		if not doChecks() then
+			return false
+		end
+		printerPeripheral.newPage()
+		printerPeripheral.setPageTitle(pageTitle.." (Page 1)")
+		page = 2
+		for i,v in ipairs(lines) do
+			local line = v
+			for position=1, #line do
+				printerPeripheral.write(string.sub(line, position,position))
+				local x,y = printerPeripheral.getCursorPos()
+				if x > printerPeripheralX then
+					newLine()
+				end
+				if y > printerPeripheralY then
+					if not newPage() then
+						return false
+					end
+				end
+
+			end
+			local x,y = printerPeripheral.getCursorPos()
+			newLine()
+			if y > printerPeripheralY then
+				newPage()
+			end
+		end
+		
+		while not printerPeripheral.endPage() do
+			local x,y = term.getCursorPos()
+			term.setCursorPos(1, 0)
+			term.setTextColor(colors.red)
+			term.write("Print Failed: Output tray full!")
+			term.setTextColor(colors.white)
+			term.setCursorPos(x,y)
+			return false
+		end
+		return true
+	else
+		return false
+	end
+end
+
+function serv()
+	for i,v in ipairs(rs.getSides()) do
+		if peripheral.getType(v) == "modem" then
+			rednet.open(v)
+		end
+	end
+	while true do
+		local id, msg = rednet.receive()
+		msg = textutils.unserialize(msg) -- File Packet Structure: {"FILE"/"PRINT", fileName, fileContents}
+		if type(msg) == "table" then
+			if msg[1] == "FILE" then
+				if not fs.exists("remoteFiles/") then
+					fs.makeDir("remoteFiles/")
+				end
+				local handle = fs.open(fs.combine("remoteFiles/", msg[2]), "w")
+				handle.write(msg[3])
+				handle.close()
+				os.queueEvent("file_received", id, msg[2], msg[3])
+				local oldX, oldY = term.getCursorPos()
+				term.setCursorPos(1,1)
+				term.setTextColor(colors.lime)
+				term.write("File Received!")
+				term.setTextColor(colors.white)
+				term.setCursorPos(oldX, oldY)
+				os.sleep(2)
+				oldX, oldY = term.getCursorPos()
+				term.setCursorPos(1,1)
+				term.clearLine()
+				term.setCursorPos(oldX, oldY)
+			elseif msg[1] == "PRINT" then
+				if not fs.exists("remoteFiles/prints") then
+					fs.makeDir("remoteFiles/prints")
+				end
+				local handle = fs.open(fs.combine("remoteFiles/prints/", msg[2]), "w")
+				handle.write(msg[3])
+				handle.close()
+				os.queueEvent("print_received", id, msg[2], msg[3])
+				local oldX, oldY = term.getCursorPos()
+				term.setCursorPos(1,1)
+				term.setTextColor(colors.lime)
+				term.write("Print Received!")
+				term.setTextColor(colors.white)
+				term.setCursorPos(oldX, oldY)
+				os.sleep(2)
+				oldX, oldY = term.getCursorPos()
+				term.setCursorPos(1,1)
+				term.clearLine()
+				term.setCursorPos(oldX, oldY)
+				for i,v in ipairs(rs.getSides()) do
+					if peripheral.getType(v) == "printer" then
+						if msg[4] then
+							printFile(v, fs.combine("remoteFiles/prints/", msg[2]), msg[4])
+						else
+							printFile(v, fs.combine("remoteFiles/prints/", msg[2]), msg[2])
+						end
+						break
+					end
+				end
+			end
+		end
+	end
+end

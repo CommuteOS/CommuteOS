@@ -16,7 +16,8 @@ For those of you who don't remember, or were not on the forums then, a few month
 * KillaVanilla - Developer
 * mad - Developer
 * PixelToast - Developer
-* [zekesonxx](http://github.com/zekesonxx) - Developer
+* [zekesonxx](https://github.com/zekesonxx) - Developer
+* [alakazard12](https://github.com/alakazard12) - Developer (Created the installer)
 
 ##Credit
 ######Where it is due.

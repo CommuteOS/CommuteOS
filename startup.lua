@@ -3,9 +3,9 @@
 -- Load libs
 
 for k,v in pairs(fs.list("/lib")) do
-	dofile(v)
+	dofile("/lib/"..v)
 end
 
 -- Start login
 
-dofile("/boot/loginGui.lua")
+dofile("/boot/loginGui")

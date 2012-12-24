@@ -1,17 +1,22 @@
 if term.isColor() == nil or term.isColor() == false then
 	term.clear()
 	term.setCursorPos(1,1)
-	term.setTextColor(colors.red)
-	print("To use CommuteOS you must have a advanced computer.")
-	term.setTextColor(colors.white)
-	term.setCursorPos(1,3)
-	print("Crafting a advanced computer: ")
-	print("III")
-	print("IRI")
-	print("IGI")
-	print("I = gold ingot, R = redstone and G = glass pane")
-end
+        print [[
+This system does not meet one or more of the
+minimum requirements needed to install this
+product. 
+
+System Requirements:
+- 7 Golden Ingots
+- 1 Redstone
+- 1 Glass Pane
+
+If you need a step-by-step guide on how to build
+the computer, please put your computer back in
+the box and return it to your nearest retailer
+for a refund.]]
 
 print("Press any key to shutdown...")
 os.pullEvent("key")
 os.shutdown()
+end

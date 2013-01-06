@@ -17,6 +17,7 @@ For those of you who don't remember, or were not on the forums then, a few month
 * mad - Developer
 * PixelToast - Developer
 * [zekesonxx](http://github.com/zekesonxx) - Developer
+* [alakazard12](https://github.com/alakazard12) - Developer
 
 ##Credit
 ######Where it is due.

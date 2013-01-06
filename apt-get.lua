@@ -1,7 +1,7 @@
 local args = {...}
 
 if #args ~= 2 then
-  error("Usage: "..shell.getRunningProgram.." <Github File Game> <Save To>")
+  error("Usage: "..shell.getRunningProgram.." <Github File Name> <Save To>")
 end
 
 --Config
